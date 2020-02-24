@@ -8,7 +8,11 @@ import java.util.Iterator;
 
 public class Cage {
 
-    ArrayList<Cell> cells;
+    public void setCells(ArrayList<Cell> cells) {
+        this.cells = cells;
+    }
+
+    private ArrayList<Cell> cells;
     Cell cell;
     //Cell last;
     Cell leadingCell;
@@ -31,12 +35,11 @@ public class Cage {
 
 
     public boolean addCells(Cell... all) {
-        cells = new ArrayList<Cell>();
         for (Cell cell : all) {
             getCells().add(cell);
         }
-        for (int i = 0; i < cells.size(); i++) {
-            while (getCells().get(i + 1) != null) {
+        for (int i = 0; i < getCells().size()-1; i++) {
+            if (getCells().get(i) != null) {
                 if (!getCells().get(i).isAdjacentTo(getCells().get(i + 1))) {
                     getCells().clear();
                     return false;
@@ -45,13 +48,7 @@ public class Cage {
         }
         return true;
     }
-
-    public void addBorders() {
-        Iterator i = cells.iterator();
-//        if (i)
-//        cell.setBorder(new Border(stroke = new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(4,4,4,4), Insets.EMPTY)));
-//      }
-    }
+    
 
     public Cell findAdjacent(Cell cell) {
         Iterator<Cell> i = getCells().iterator();
@@ -62,7 +59,10 @@ public class Cage {
     }
 
     public void setBorer() {
-        getLeadingCell().setBorder(new Border(stroke = new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(4, 4, 4, 4), Insets.EMPTY)));
+        for (Cell cell : getCells()) {
+            cell.setBorder(new Border(stroke = new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(4, 4, 4, 4), Insets.EMPTY)));
+        }
+
     }
 
 
