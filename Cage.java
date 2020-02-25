@@ -2,7 +2,11 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.shape.Polygon;
 
+import javax.swing.border.StrokeBorder;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -48,7 +52,7 @@ public class Cage {
         }
         return true;
     }
-    
+
 
     public Cell findAdjacent(Cell cell) {
         Iterator<Cell> i = getCells().iterator();
@@ -62,7 +66,6 @@ public class Cage {
         for (Cell cell : getCells()) {
             cell.setBorder(new Border(stroke = new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(4, 4, 4, 4), Insets.EMPTY)));
         }
-
     }
 
 

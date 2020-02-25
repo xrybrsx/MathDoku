@@ -8,10 +8,13 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.*;
+import javafx.scene.shape.Polygon;
 import javafx.stage.Stage;
 
 import java.awt.event.KeyEvent;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Objects;
+import java.util.Optional;
 
 
 public class GUI extends Application {
@@ -19,13 +22,15 @@ public class GUI extends Application {
     private TextField textField;
     private ArrayList<TextField> textFields;
     private Cell cell;
+    private ArrayList<Cage> cages;
     private int hardnessLevel; /* Number of columns and rows. */
     private HBox hBox;
     private VBox menuBar;
-    private ArrayList<Cell> gridCells;/* Contains every Cell in the grid cell, sorted (column,row) */
+    private ArrayList<Cell> gridCells;
+    /* Contains every Cell in the grid cell, sorted (column,row) */
+    private ArrayList<TextField> rowText;
     private ArrayList<Button> numberButtons;
     private UndoRedo tempNum;
-
 
 
     GUI(int hardnessLevel) {
@@ -37,21 +42,24 @@ public class GUI extends Application {
 
     }
 
-    public TextField getTextField() {
-        return textField;
-    }
-
     public ArrayList<TextField> getTextFields() {
         return textFields;
     }
 
-    public Cell getCell(int column, int row) {
-        Cell cell = new Cell(column, row);
-        return cell;
+    public void setTextFields(ArrayList<TextField> textFields) {
+        this.textFields = textFields;
     }
 
+    public Cell getCell(int column, int row) {
+        int i = row*hardnessLevel + column;
+       return getGridCell(i);
+    }
     public int getHardnessLevel() {
         return hardnessLevel;
+    }
+
+    public void setHardnessLevel(int hardnessLevel) {
+        this.hardnessLevel = hardnessLevel;
     }
 
     public HBox getHBox() {
@@ -62,8 +70,16 @@ public class GUI extends Application {
         return menuBar;
     }
 
+    public void setMenuBar(VBox menuBar) {
+        this.menuBar = menuBar;
+    }
+
     public ArrayList<Button> getNumberButtons() {
         return numberButtons;
+    }
+
+    public void setNumberButtons(ArrayList<Button> numberButtons) {
+        this.numberButtons = numberButtons;
     }
 
     public void start(Stage primaryStage) {
@@ -73,13 +89,13 @@ public class GUI extends Application {
         pane.setPadding(new Insets(10, 10, 10, 10));
         pane.setGridLinesVisible(true);
         pane.setAlignment(Pos.CENTER);
-        pane.setMinSize(300,300);
+        pane.setMinSize(300, 300);
 
         /*Creating a VBox in each grid cell, adding constraints and text field in each one.
          * Nested for-loop for n columns and n rows according to hardness level.*/
         setGridCells(new ArrayList<Cell>());
         setTextFields(new ArrayList<>());
-        for (int i = 0; i < getHardnessLevel(); i++) {
+        for (int i = 0; i< getHardnessLevel(); i++) {
             ColumnConstraints column = new ColumnConstraints(20, 20, Double.MAX_VALUE);
             RowConstraints row = new RowConstraints(20, 20, Double.MAX_VALUE);
             row.setVgrow(Priority.ALWAYS);            //creating constraints and giving them priority
@@ -87,13 +103,15 @@ public class GUI extends Application {
             pane.getColumnConstraints().add(column);
             pane.getRowConstraints().add(row);
             for (int j = 0; j < getHardnessLevel(); j++) {
-                pane.add(cell = new Cell(i,j), i, j);
+                pane.add(cell = new Cell(j, i), j, i);
                 getGridCells().add(cell);
-                cell.getChildren().add(textField = new TextField());
-                cell.setAlignment(Pos.BOTTOM_CENTER);
-                getTextField().setPrefHeight(10);
-                getTextFields().add(getTextField());
-                setTextFieldLimit(getTextField()); // restrict text input to size 1 and to numbers only
+                cell.setGui(this);
+                getCell(j,i).setTextField(new TextField());
+                //setTextField(textField);
+                getCell(j,i).setAlignment(Pos.BOTTOM_CENTER);
+              //  getCell(j,i).getTextField().setPrefHeight(10);
+                getTextFields().add(getCell(j,i).getTextField());
+                getCell(j,i).setTextFieldLimit(); // restrict text input to size 1 and to numbers only
             }
         }
         /* The HBox contains the available buttons with a number to put in a cell. */
@@ -126,7 +144,9 @@ public class GUI extends Application {
             else alert.close();
 
         });
-        getMenuBar().getChildren().addAll(new Button("New Game"), clearAll,
+        Button newGame = new Button("New Game");
+        newGame.setOnAction(e -> new Solver(this));
+        getMenuBar().getChildren().addAll(newGame, clearAll,
                 new Button("Hint"));
         getMenuBar().setAlignment(Pos.CENTER);
         getMenuBar().setPadding(new Insets(10, 10, 10, 10));
@@ -137,6 +157,7 @@ public class GUI extends Application {
         borderPane.setCenter(pane);
         borderPane.setBottom(getHBox());
         borderPane.setRight(getMenuBar());
+
 
         Scene scene = new Scene(borderPane, 450, 400);
         primaryStage.setMinHeight(400);
@@ -162,14 +183,14 @@ public class GUI extends Application {
         undo.setOnAction(e -> {
             Node fo = scene.getFocusOwner(); // the current textField
             if (fo instanceof TextInputControl) {
-                ((TextInputControl) fo).setText( tempNum.undo());
+                ((TextInputControl) fo).setText(tempNum.undo());
             }
         });
         redo.setFocusTraversable(false);
         redo.setOnAction(e -> {
             Node fo = scene.getFocusOwner(); // the current textField
             if (fo instanceof TextInputControl) {
-                ((TextInputControl) fo).setText( tempNum.redo());
+                ((TextInputControl) fo).setText(tempNum.redo());
             }
         });
     }
@@ -178,82 +199,37 @@ public class GUI extends Application {
         return gridCells;
     }
 
+    public void setGridCells(ArrayList<Cell> gridCells) {
+        this.gridCells = gridCells;
+    }
+
     public Cell getGridCell(int i) {
         return getGridCells().get(i);
     }
 
-    /* Adding a listener for when the cursor is in the textField -
-     * sets a limit of 1 and only numbers in the input */
-    public void setTextFieldLimit(TextField textField) {
-        int maxLength = 1;
-        textField.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(final ObservableValue<? extends String> ov, final String oldValue, final String newValue) {
-                if (!textField.getText().matches("[0-9]") || Integer.parseInt(textField.getText()) > hardnessLevel || textField.getText() == null) { // if the text doesn't match integers 0-9:
-                    String s = Objects.requireNonNull(textField.getText()).substring(0, 0);
-                    // or is bigger than the limit of hardness level
-                    textField.setText(s);
-                }
-//                if (textField.getText().length() > maxLength) { // if the text is more than 1
-////                //String s = textField.getText().substring(0, maxLength);
-////                //textField.getText().replaceAll(oldValue,newValue);
-////                textField.setText(textField.getText().replaceAll(oldValue,newValue));
-////                //textField.setText(s);
-//                tempNum.add(newValue);
-//                }
-                char c = textField.getText().charAt(1);
-                int len = textField.getText().length();
-                if (len < maxLength) {
-                    return;
-                }
-                else {
-                    if((c== KeyEvent.VK_BACK_SPACE)||
-                            (c==KeyEvent.VK_DELETE) ||
-                            (c==KeyEvent.VK_ENTER)||
-                            (c==KeyEvent.VK_TAB))
-                        return;
-                    else {
-                        textField.setText(null);
-                        textField.setText(textField.getText().replaceAll(oldValue,newValue));
-                    }
-                }
-            }
-        });
-    }
-    public void clearAll(){
-        for (TextField textField : textFields )
-        textField.clear();
-    }
 
-    public void setTextField(TextField textField) {
-        this.textField = textField;
-    }
-
-    public void setTextFields(ArrayList<TextField> textFields) {
-        this.textFields = textFields;
+    public void clearAll() {
+        for (TextField textField : textFields)
+            textField.clear();
     }
 
     public void setCell(Cell cell) {
         this.cell = cell;
     }
 
-    public void setHardnessLevel(int hardnessLevel) {
-        this.hardnessLevel = hardnessLevel;
-    }
-
     public void sethBox(HBox hBox) {
         this.hBox = hBox;
     }
+    public void getBorder(){
 
-    public void setMenuBar(VBox menuBar) {
-        this.menuBar = menuBar;
     }
-
-    public void setGridCells(ArrayList<Cell> gridCells) {
-        this.gridCells = gridCells;
-    }
-
-    public void setNumberButtons(ArrayList<Button> numberButtons) {
-        this.numberButtons = numberButtons;
+    public ArrayList<TextField> getRow(int row){
+        for (int i= 0; i<hardnessLevel;i++){
+            if (getCell(i,row).getTextField() == null){
+                getCell(i,row).getTextField().setText("1");
+            }
+            rowText.add(getCell(i,row).getTextField());
+        }
+        return rowText;
     }
 }
