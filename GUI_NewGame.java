@@ -30,6 +30,7 @@ public class GUI_NewGame extends Application {
             setFile(fileChooser.showOpenDialog(primaryStage));
             try {
                 readFile();
+                primaryStage.show();
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -55,11 +56,11 @@ public class GUI_NewGame extends Application {
         inputFile = file;
     }
     public void readFile() throws IOException {
-        FileReader reader = new FileReader(getFile());
-        System.out.println(reader);
+        GameReader reader = new GameReader(getFile().toString());
     }
 
     public static void main(String[] args) {
+
         launch(args);
     }
 

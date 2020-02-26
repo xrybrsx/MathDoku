@@ -32,6 +32,7 @@ public class GUI extends Application {
     private ArrayList<TextField> rowText;
     private ArrayList<Button> numberButtons;
     private UndoRedo tempNum;
+    private Cage cage;
 
     public GridPane getPane() {
         return pane;
@@ -46,6 +47,7 @@ public class GUI extends Application {
 
     GUI(int hardnessLevel) {
         this.setHardnessLevel(hardnessLevel);
+
     }
 
     public static void main(String[] args) {

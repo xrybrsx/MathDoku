@@ -80,7 +80,7 @@ public class Cell extends VBox {
     }
 
     public void setOperator(Label operator) {
-        this.operator = operator;
+        getCage().getLeadingCell().operator = operator;
     }
 
     public Label getResult() {
