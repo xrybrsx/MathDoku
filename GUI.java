@@ -9,6 +9,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Polygon;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.awt.event.KeyEvent;
@@ -31,6 +32,16 @@ public class GUI extends Application {
     private ArrayList<TextField> rowText;
     private ArrayList<Button> numberButtons;
     private UndoRedo tempNum;
+
+    public GridPane getPane() {
+        return pane;
+    }
+
+    public void setPane(GridPane pane) {
+        this.pane = pane;
+    }
+
+    private GridPane pane;
 
 
     GUI(int hardnessLevel) {
@@ -85,7 +96,7 @@ public class GUI extends Application {
     public void start(Stage primaryStage) {
 
         /* GridPane with visible grids as a base for the MathDoku. */
-        GridPane pane = new GridPane();
+        pane = new GridPane();
         pane.setPadding(new Insets(10, 10, 10, 10));
         pane.setGridLinesVisible(true);
         pane.setAlignment(Pos.CENTER);
@@ -107,9 +118,8 @@ public class GUI extends Application {
                 getGridCells().add(cell);
                 cell.setGui(this);
                 getCell(j,i).setTextField(new TextField());
-                //setTextField(textField);
                 getCell(j,i).setAlignment(Pos.BOTTOM_CENTER);
-              //  getCell(j,i).getTextField().setPrefHeight(10);
+                getCell(j,i).getTextField().setPrefHeight(10);
                 getTextFields().add(getCell(j,i).getTextField());
                 getCell(j,i).setTextFieldLimit(); // restrict text input to size 1 and to numbers only
             }

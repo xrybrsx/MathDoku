@@ -5,6 +5,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class Cell extends VBox {
@@ -13,13 +14,18 @@ public class Cell extends VBox {
     private Label result;
     private Cage cage;
     private GUI gui;
+    private int column;
+    private int row;
+    private ArrayList<Cell> adjacentCells;
 
+    Cell(int column, int row) {
+        this.column = column;
+        this.row = row;
+
+    }
 
     public TextField getTextField() {
         return this.textField;
-    }
-    public void setGui(GUI gui){
-        this.gui = gui;
     }
 
     public void setTextField(TextField textField) {
@@ -27,11 +33,15 @@ public class Cell extends VBox {
         this.getChildren().add(this.textField);
     }
 
+    public void setGui(GUI gui) {
+        this.gui = gui;
+    }
+
     /* Adding a listener for when the cursor is in the textField -
      * sets a limit of 1 and only numbers in the input */
     public void setTextFieldLimit() {
         int maxLength = 1;
-       getTextField().textProperty().addListener(new ChangeListener<String>() {
+        getTextField().textProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(final ObservableValue<? extends String> ov, final String oldValue, final String newValue) {
                 if (!textField.getText().matches("[1-9]") || Integer.parseInt(textField.getText()) > gui.getHardnessLevel() || textField.getText() == null) { // if the text doesn't match integers 0-9:
@@ -97,32 +107,48 @@ public class Cell extends VBox {
         this.row = row;
     }
 
-    private int column;
-    private int row;
-
-    Cell(int column,int row){
-        this.column = column;
-        this.row = row;
-
+    public Cage getCage() {
+        return cage;
     }
 
     public void setCage(Cage cage) {
         this.cage = cage;
     }
 
-    public Cage getCage(){
-        return cage;
-    }
-    public boolean isAdjacentTo(Cell cell){
-        if (getRow() == cell.getRow()+1 || getRow() == cell.getRow()-1) {
-            return true;
-        }else if (getColumn() == cell.getColumn()+1 || getColumn() == cell.getColumn()-1){
-                return true;
-            }else {
-            return false;
+    public ArrayList<Cell> getAdjacentCells() {
+        adjacentCells = new ArrayList<>();
+        if (hasTop()) {
+            adjacentCells.add(gui.getCell(getColumn(), getRow() - 1));
         }
-
+        if (hasRight()) {
+            adjacentCells.add(gui.getCell(getColumn() + 1, getRow()));
+        }
+        if (hasBottom()) {
+            adjacentCells.add(gui.getCell(getColumn(), getRow() + 1));
+        }
+        if (hasLeft()) {
+            adjacentCells.add(gui.getCell(getColumn() - 1, getRow()));
+        }
+        return adjacentCells;
     }
 
+    public boolean hasRight() {
+        if (getColumn() == gui.getHardnessLevel() - 1) return false;
+        else return true;
+    }
 
+    public boolean hasLeft() {
+        if (getColumn() == 0) return false;
+        else return true;
+    }
+
+    public boolean hasTop() {
+        if (getRow() == 0) return false;
+        else return true;
+    }
+
+    public boolean hasBottom() {
+        if (getRow() == gui.getHardnessLevel() - 1) return false;
+        else return true;
+    }
 }

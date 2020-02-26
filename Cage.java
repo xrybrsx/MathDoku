@@ -1,16 +1,20 @@
+import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.Box;
 import javafx.scene.shape.Polygon;
+import javafx.scene.shape.Shape;
 
 import javax.swing.border.StrokeBorder;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class Cage {
+public class Cage extends Shape {
 
     public void setCells(ArrayList<Cell> cells) {
         this.cells = cells;
@@ -38,35 +42,21 @@ public class Cage {
     }
 
 
-    public boolean addCells(Cell... all) {
+    public void addCellsToCage(Cell... all) {
+       ArrayList tmp = new ArrayList<>();
         for (Cell cell : all) {
-            getCells().add(cell);
+            if(!checkIfAdjacent(cell)) tmp.add(cell);
+            else getCells().add(cell);
         }
-        for (int i = 0; i < getCells().size()-1; i++) {
-            if (getCells().get(i) != null) {
-                if (!getCells().get(i).isAdjacentTo(getCells().get(i + 1))) {
-                    getCells().clear();
-                    return false;
-                }
-            }
+        tmp.clear();
+    }
+    public boolean checkIfAdjacent(Cell cell){
+        int count = 0;
+        for (Cell thisCell : getCells()){
+            if (!cell.getAdjacentCells().contains(thisCell) && getCells() != null) count++;
+            if(getCells().size()==count) return false;
         }
         return true;
     }
-
-
-    public Cell findAdjacent(Cell cell) {
-        Iterator<Cell> i = getCells().iterator();
-        while (!getCells().contains(cell.isAdjacentTo(i.next()))) {
-            return cell;
-        }
-        return null;
-    }
-
-    public void setBorer() {
-        for (Cell cell : getCells()) {
-            cell.setBorder(new Border(stroke = new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(4, 4, 4, 4), Insets.EMPTY)));
-        }
-    }
-
 
 }
