@@ -1,20 +1,17 @@
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
-import javafx.scene.shape.Polygon;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.Optional;
 
 
@@ -33,16 +30,21 @@ public class GUI extends Application {
     private ArrayList<Button> numberButtons;
     private UndoRedo tempNum;
     private Cage cage;
-
-    public GridPane getPane() {
-        return pane;
-    }
-
-    public void setPane(GridPane pane) {
-        this.pane = pane;
-    }
-
     private GridPane pane;
+
+    public Hint getHint() {
+        return hint;
+    }
+
+    private Hint hint;
+    private ArrayList<TextField> getRow;
+    private ArrayList<TextField> getColumn;
+
+    public ToggleButton getHintButton() {
+        return hintButton;
+    }
+
+    private ToggleButton hintButton;
 
 
     GUI(int hardnessLevel) {
@@ -55,6 +57,26 @@ public class GUI extends Application {
 
     }
 
+    public ArrayList<TextField> getColumn() {
+        return getColumn;
+    }
+
+    public ArrayList<Cage> getCages() {
+        return cages;
+    }
+
+    public void setCages(ArrayList<Cage> cages) {
+        this.cages = cages;
+    }
+
+    public GridPane getPane() {
+        return pane;
+    }
+
+    public void setPane(GridPane pane) {
+        this.pane = pane;
+    }
+
     public ArrayList<TextField> getTextFields() {
         return textFields;
     }
@@ -64,9 +86,12 @@ public class GUI extends Application {
     }
 
     public Cell getCell(int column, int row) {
-        int i = row*hardnessLevel + column;
-       return getGridCell(i);
+        if ((column >= 0 && column <= getHardnessLevel()) && (row >= 0 && row <= getHardnessLevel())) {
+            int i = row * hardnessLevel + column;
+            return getGridCell(i);
+        } else return null;
     }
+
     public int getHardnessLevel() {
         return hardnessLevel;
     }
@@ -103,12 +128,13 @@ public class GUI extends Application {
         pane.setGridLinesVisible(true);
         pane.setAlignment(Pos.CENTER);
         pane.setMinSize(300, 300);
+        pane.setBackground(Background.EMPTY);
 
         /*Creating a VBox in each grid cell, adding constraints and text field in each one.
          * Nested for-loop for n columns and n rows according to hardness level.*/
         setGridCells(new ArrayList<Cell>());
         setTextFields(new ArrayList<>());
-        for (int i = 0; i< getHardnessLevel(); i++) {
+        for (int i = 0; i < getHardnessLevel(); i++) {
             ColumnConstraints column = new ColumnConstraints(20, 20, Double.MAX_VALUE);
             RowConstraints row = new RowConstraints(20, 20, Double.MAX_VALUE);
             row.setVgrow(Priority.ALWAYS);            //creating constraints and giving them priority
@@ -118,12 +144,18 @@ public class GUI extends Application {
             for (int j = 0; j < getHardnessLevel(); j++) {
                 pane.add(cell = new Cell(j, i), j, i);
                 getGridCells().add(cell);
-                cell.setGui(this);
-                getCell(j,i).setTextField(new TextField());
-                getCell(j,i).setAlignment(Pos.BOTTOM_CENTER);
-                getCell(j,i).getTextField().setPrefHeight(10);
-                getTextFields().add(getCell(j,i).getTextField());
-                getCell(j,i).setTextFieldLimit(); // restrict text input to size 1 and to numbers only
+                getCell(j, i).setGui(this);
+                getCell(j, i).setFlow(new FlowPane());
+                getCell(j, i).setOperator(new Label());
+                getCell(j, i).setResult(new Label());
+                getCell(j, i).setTextField(new TextField(""));
+                getCell(j, i).getTextField().setAlignment(Pos.BOTTOM_CENTER);
+                getCell(j, i).getTextField().setPrefHeight(10);
+                getTextFields().add(getCell(j, i).getTextField());
+                getCell(j, i).setTextFieldLimit();
+                // restrict text input to size 1 and to numbers only
+                //   getCell(j, i).getOperator().setAlignment(Pos.BASELINE_CENTER);
+
             }
         }
         /* The HBox contains the available buttons with a number to put in a cell. */
@@ -133,10 +165,12 @@ public class GUI extends Application {
         for (int i = 1; i < getHardnessLevel() + 1; i++) {
             getHBox().getChildren().add(number = new Button(Integer.toString(i)));
             getNumberButtons().add(number);
+            setEffect(number);
         }
 
         Button undo = new Button("Undo");
         Button redo = new Button("Redo");
+        setEffect(undo,redo);
         getHBox().getChildren().addAll(undo, redo);
         getHBox().setAlignment(Pos.CENTER);
         getHBox().setPadding(new Insets(10, 10, 10, 10));
@@ -157,15 +191,30 @@ public class GUI extends Application {
 
         });
         Button newGame = new Button("New Game");
-        newGame.setOnAction(e -> new Solver(this));
-        getMenuBar().getChildren().addAll(newGame, clearAll,
-                new Button("Hint"));
+        newGame.setOnAction(e -> {
+            Stage stage = new Stage();
+            GUI_NewGame game = new GUI_NewGame();
+            game.start(stage);
+            stage.show();
+        });
+        hintButton = new ToggleButton("Hint");
+        hintButton.setOnMouseClicked(e ->{
+                hint = new Hint(this);
+        if (this.getHintButton().isSelected()){
+            hint.checkAllColumns();
+            hint.checkAllRows();
+        }else hint.stop();
+
+    });
+        getMenuBar().getChildren().addAll(newGame, clearAll, hintButton);
+        setEffect(newGame,clearAll);
         getMenuBar().setAlignment(Pos.CENTER);
         getMenuBar().setPadding(new Insets(10, 10, 10, 10));
         getMenuBar().setSpacing(10);
 
 
         BorderPane borderPane = new BorderPane();
+        borderPane.setBackground(Background.EMPTY);
         borderPane.setCenter(pane);
         borderPane.setBottom(getHBox());
         borderPane.setRight(getMenuBar());
@@ -216,9 +265,10 @@ public class GUI extends Application {
     }
 
     public Cell getGridCell(int i) {
-        return getGridCells().get(i);
+        if (i >= 0 && i < getHardnessLevel() * getHardnessLevel())
+            return getGridCells().get(i);
+        else return null;
     }
-
 
     public void clearAll() {
         for (TextField textField : textFields)
@@ -232,16 +282,54 @@ public class GUI extends Application {
     public void sethBox(HBox hBox) {
         this.hBox = hBox;
     }
-    public void getBorder(){
 
-    }
-    public ArrayList<TextField> getRow(int row){
-        for (int i= 0; i<hardnessLevel;i++){
-            if (getCell(i,row).getTextField() == null){
-                getCell(i,row).getTextField().setText("1");
+    public void iterateRow(int row) {
+        if (row >= 0 && row < getHardnessLevel()) {
+            ArrayList list = new ArrayList<TextField>();
+            int j = getHardnessLevel() * row;
+            for (int i = getHardnessLevel() * row ; i < j + getHardnessLevel(); i++) {
+                list.add(getTextFields().get(i));
             }
-            rowText.add(getCell(i,row).getTextField());
+            this.getRow = list;
         }
-        return rowText;
+    }
+
+    public ArrayList<TextField> getRow() {
+        return getRow;
+    }
+
+    public ArrayList<TextField> iterateColumn(int column) {
+        if (column >= 0 && column < getHardnessLevel()) {
+            ArrayList list = new ArrayList<TextField>();
+            int j = 0;
+            for (int i = column ; i < getHardnessLevel()*getHardnessLevel(); i = i + getHardnessLevel()) {
+                list.add(getCell(column,j).getTextField());
+                j++;
+            }
+            return this.getColumn = list;
+        }
+        return null;
+    }
+    public void setEffect(Button ...all){
+        DropShadow shadow = new DropShadow();
+        for (Button button : all) {
+            //Adding the shadow when the mouse cursor is on
+            button.addEventHandler(MouseEvent.MOUSE_ENTERED,
+                    new EventHandler<MouseEvent>() {
+                        @Override
+                        public void handle(MouseEvent e) {
+                            button.setEffect(shadow);
+                        }
+                    });
+            //Removing the shadow when the mouse cursor is off
+            button.addEventHandler(MouseEvent.MOUSE_EXITED,
+                    new EventHandler<MouseEvent>() {
+                        @Override
+                        public void handle(MouseEvent e) {
+                            button.setEffect(null);
+
+                        }
+                    });
+        }
     }
 }

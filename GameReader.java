@@ -1,8 +1,9 @@
 import javafx.application.Application;
-import javafx.scene.control.Label;
 import javafx.stage.Stage;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,7 @@ public class GameReader {
         file = text.split("\\s|,|\n");
         read();
     }
+
     public static void main(String[] args) {
         Application.launch(args);
     }
@@ -41,10 +43,11 @@ public class GameReader {
         }
         return true;
     }
-    public int countCells(String str){
+
+    public int countCells(String str) {
         String[] number = str.split("|,|\n");
         int count = 0;
-        for (String string : number){
+        for (String string : number) {
             if (string.equals(" ") || string.equals(",")) count++;
         }
         count = (int) Math.sqrt(count);
@@ -52,41 +55,47 @@ public class GameReader {
     }
 
 
-   public void read(){
+    public void read() {
         ArrayList<String> labels = new ArrayList<>();
-       ArrayList<String> numbers = new ArrayList<>();
-       ArrayList<String> operators = new ArrayList<>();
-       ArrayList<Cage> cages = new ArrayList<>();
+        ArrayList<String> numbers = new ArrayList<>();
+        ArrayList<String> operators = new ArrayList<>();
+        ArrayList<Cage> cages = new ArrayList<>();
         Stage stage = new Stage();
         GUI gui = new GUI(level);
         gui.start(stage);
+        boolean toggle = true;
+
 
         for (String str : file) {
             if (isInteger(str)) {
-                while (isInteger(str)){
+                if (!toggle){
+                toggle = true;
                 Cage cage = new Cage();
                 cage.setCells(new ArrayList<>());
-                cage.addCellsToCage(gui.getGridCell(Integer.parseInt(str) - 1));
                 cages.add(cage);}
+                cages.get(cages.size() - 1).addCellsToCage(gui.getGridCell(Integer.parseInt(str) - 1));
+
             } else {
                 labels.add(str);
+                toggle = false;
             }
         }
-            for (String stringNum : labels){
-              stringNum = stringNum.replaceAll("\\D+","");
-              numbers.add(stringNum);
-
-            }
-            for (String stringOp : labels){
-               stringOp= stringOp.replaceAll("[0-9]","");
-                operators.add(stringOp);
-            }
-            for (int i = 0; i<cages.size(); i++){
-                cages.get(i).setLeadingCell(new Label(numbers.get(i)), new Label(operators.get(i)));
-            }
-
+        for (String stringNum : labels) {
+            stringNum = stringNum.replaceAll("\\D+", "");
+            numbers.add(stringNum);
 
         }
+        for (String stringOp : labels) {
+            stringOp = stringOp.replaceAll("[0-9]", "");
+            operators.add(stringOp);
+        }
+        for (int i = 0; i < cages.size() - 1; i++) {
+            cages.get(i).setLeadingCell(numbers.get(i), operators.get(i));
+        }
+        for (Cage cage: cages) cage.setBorder();
+
+
     }
+}
 
 

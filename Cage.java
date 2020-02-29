@@ -1,19 +1,19 @@
-import javafx.scene.control.Label;
-import javafx.scene.shape.Shape;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 
-public class Cage extends Shape {
+public class Cage {
 
     private ArrayList<Cell> cells;
     private Cell cell;
     private Cell leadingCell;
     private GUI gui;
 
-    public void setLeadingCell(Label operator, Label result) {
+    public void setLeadingCell(String operator, String result) {
         leadingCell = cells.get(0);
-        leadingCell.setOperator(operator);
-        leadingCell.setResult(result);
+        leadingCell.getOperator().setText(operator);
+        leadingCell.getResult().setText(result);
     }
 
     public GUI getGui() {
@@ -40,9 +40,32 @@ public class Cage extends Shape {
         ArrayList tmp = new ArrayList<>();
         for (Cell cell : all) {
             if (!checkIfAdjacent(cell)) tmp.add(cell);
-            else getCells().add(cell);
+            else {
+                cell.setCage(this);
+                getCells().add(cell);
+            }
         }
         tmp.clear();
+    }
+
+    public boolean hasRight(Cell cell) {
+        if (getCells().contains(cell.getGui().getCell(cell.getColumn() + 1, cell.getRow()))) return true;
+        else return false;
+    }
+
+    public boolean hasLeft(Cell cell) {
+        if (getCells().contains(cell.getGui().getCell(cell.getColumn() - 1, cell.getRow()))) return true;
+        else return false;
+    }
+
+    public boolean hasTop(Cell cell) {
+        if (getCells().contains(cell.getGui().getCell(cell.getColumn(), cell.getRow() - 1))) return true;
+        else return false;
+    }
+
+    public boolean hasBottom(Cell cell) {
+        if (getCells().contains(cell.getGui().getCell(cell.getColumn(), cell.getRow() + 1))) return true;
+        else return false;
     }
 
     public boolean checkIfAdjacent(Cell cell) {
@@ -52,6 +75,42 @@ public class Cage extends Shape {
             if (getCells().size() == count) return false;
         }
         return true;
+    }
+
+    public void setBorder() {
+        for (Cell cell : getCells()) {
+            if (getCells().size() == 1)
+                cell.borderProperty().setValue(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(4, 4, 4, 4))));
+            else if (cell.borderProperty().getValue() == null && hasTop(cell) && hasRight(cell) == false && hasLeft(cell) == false && hasBottom(cell) == false)
+                cell.borderProperty().setValue(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(0, 4, 4, 4))));
+            else if (cell.borderProperty().getValue() == null && hasTop(cell) && hasRight(cell) && hasLeft(cell) == false && hasBottom(cell) == false)
+                cell.borderProperty().setValue(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(0, 0, 4, 4))));
+            else if (cell.borderProperty().getValue() == null && hasTop(cell) && hasRight(cell) && hasLeft(cell) && hasBottom(cell) == false)
+                cell.borderProperty().setValue(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(0, 0, 4, 0))));
+            else if (cell.borderProperty().getValue() == null && hasTop(cell) == false && hasRight(cell) && hasLeft(cell) && hasBottom(cell))
+                cell.borderProperty().setValue(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(4, 0, 0, 0))));
+            else if (cell.borderProperty().getValue() == null && hasTop(cell) == false && hasRight(cell) == false && hasLeft(cell) && hasBottom(cell))
+                cell.borderProperty().setValue(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(4, 4, 0, 0))));
+            else if (cell.borderProperty().getValue() == null && hasTop(cell) == false && hasRight(cell) == false && hasLeft(cell) == false && hasBottom(cell))
+                cell.borderProperty().setValue(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(4, 4, 0, 4))));
+            else if (cell.borderProperty().getValue() == null && hasTop(cell) == false && hasRight(cell) && hasLeft(cell) && hasBottom(cell) == false)
+                cell.borderProperty().setValue(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(4, 0, 4, 0))));
+            else if (cell.borderProperty().getValue() == null && hasTop(cell) == false && hasRight(cell) && hasLeft(cell) == false && hasBottom(cell))
+                cell.borderProperty().setValue(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(4, 0, 0, 4))));
+            else if (cell.borderProperty().getValue() == null && hasTop(cell) == false && hasRight(cell) == false && hasLeft(cell) && hasBottom(cell) == false)
+                cell.borderProperty().setValue(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(4, 4, 4, 0))));
+            else if (cell.borderProperty().getValue() == null && hasTop(cell) == false && hasRight(cell) && hasLeft(cell) == false && hasBottom(cell) == false)
+                cell.borderProperty().setValue(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(4, 0, 4, 4))));
+            else if (cell.borderProperty().getValue() == null && hasTop(cell) && hasRight(cell) == false && hasLeft(cell) == false && hasBottom(cell))
+                cell.borderProperty().setValue(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(0, 4, 0, 4))));
+            else if (cell.borderProperty().getValue() == null && hasTop(cell) && hasRight(cell) == false && hasLeft(cell) && hasBottom(cell))
+                cell.borderProperty().setValue(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(0, 4, 0, 0))));
+            else if (cell.borderProperty().getValue() == null && hasTop(cell) && hasRight(cell) && hasLeft(cell) == false && hasBottom(cell))
+                cell.borderProperty().setValue(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(0, 0, 0, 4))));
+            else if (cell.borderProperty().getValue() == null && hasTop(cell) && hasRight(cell) == false && hasLeft(cell) && hasBottom(cell) == false)
+                cell.borderProperty().setValue(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(0, 4, 4, 0))));
+
+        }
     }
 
 }

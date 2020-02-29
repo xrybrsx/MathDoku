@@ -1,14 +1,17 @@
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 
 public class GUI_NewGame extends Application {
@@ -19,7 +22,7 @@ public class GUI_NewGame extends Application {
 
     public void start(Stage primaryStage) {
 
-        vBox = new VBox();
+        VBox vBox = new VBox();
         Button loadFileButton = new Button("Load from file");
         loadFileButton.setOnAction(e -> {
             FileChooser fileChooser = new FileChooser();
@@ -35,11 +38,21 @@ public class GUI_NewGame extends Application {
                 ex.printStackTrace();
             }
         });
-        vBox.getChildren().addAll(newGame = new ChoiceBox(),
+
+        vBox.getChildren().addAll(newGame = new ChoiceBox(FXCollections.observableArrayList("2x2", "3x3", "4x4", "5x5", "6x6", "7x7")),
                loadFileButton,
                 new Button("Load from input"));
         newGame.setValue("New Game");
-        newGame.getItems().addAll("New Game","2x2", "3x3", "4x4", "5x5", "6x6", "7x7");
+        newGame.getSelectionModel().selectedItemProperty().addListener((ChangeListener<String>) (observableValue, number, newValue) -> {
+
+            try {
+              GameReader reader = new GameReader(  "src/" + newValue + ".txt"  );
+              primaryStage.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
         vBox.setAlignment(Pos.CENTER);
         vBox.setPadding(new Insets(10,10,10,10));
         vBox.setSpacing(10);
@@ -60,7 +73,6 @@ public class GUI_NewGame extends Application {
     }
 
     public static void main(String[] args) {
-
         launch(args);
     }
 
