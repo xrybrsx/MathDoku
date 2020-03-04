@@ -11,7 +11,25 @@ public class Cage {
     private GUI gui;
 
     public void setLeadingCell(String operator, String result) {
-        leadingCell = cells.get(0);
+        ArrayList<Cell> duplicate = new ArrayList<>();
+        for (int i = 0; i < cells.size() ; i++) {
+            duplicate.add(cells.get(i));
+        }
+
+        while (duplicate.size()>1){
+            if (duplicate.get(0).getID() > duplicate.get(1).getID())
+              duplicate.remove(0);
+            if (duplicate.size() > 1) {
+                if (duplicate.get(0).getID() < duplicate.get(1).getID())
+                    duplicate.remove(1);
+            }
+        }
+        for (Cell cell: cells){
+            if(cell == duplicate.get(0)){
+            leadingCell = cell;
+            break;
+            }
+        }
         leadingCell.getOperator().setText(operator);
         leadingCell.getResult().setText(result);
     }

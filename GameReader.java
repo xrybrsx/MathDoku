@@ -10,22 +10,24 @@ import java.util.stream.Collectors;
 public class GameReader {
 
     BufferedReader reader;
-    String text;
     String[] file;
     GUI_NewGame newGame;
     int level;
+    ArrayList<String> lines;
 
     public GameReader(String filepath) throws IOException {
         try {
             reader = new BufferedReader((new FileReader(filepath)));
-            text = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+            lines = new ArrayList<>();
+            while (reader.ready())
+            lines.add(reader.readLine());
         } catch (IOException e) {
             reader = null;
             System.out.println("File doesn't exist!");
         }
-        assert text != null;
-        level = countCells(text);
-        file = text.split("\\s|,|\n");
+//        assert text != null;
+            level = countCells();
+//        file = text.split("\\s|,|\n");
         read();
     }
 
@@ -44,15 +46,19 @@ public class GameReader {
         return true;
     }
 
-    public int countCells(String str) {
-        String[] number = str.split("|,|\n");
+    public int countCells() {
         int count = 0;
-        for (String string : number) {
-            if (string.equals(" ") || string.equals(",")) count++;
+        for (String string:lines) {
+            for (int i = 0; i < string.length(); i++) {
+              char ch = string.charAt(i);
+              if (ch == ',')count++;
+            }
         }
+        count = lines.size() + count;
         count = (int) Math.sqrt(count);
         return count;
     }
+
 
 
     public void read() {
@@ -63,21 +69,20 @@ public class GameReader {
         Stage stage = new Stage();
         GUI gui = new GUI(level);
         gui.start(stage);
-        boolean toggle = true;
 
-
-        for (String str : file) {
-            if (isInteger(str)) {
-                if (!toggle){
-                toggle = true;
+        for(String string: lines){
+            if (string.contains(" ")){
+                String[] split = string.split(" ", 2);
+                String[] split2 = split[1].split(",");
+                labels.add(split[0]);
                 Cage cage = new Cage();
                 cage.setCells(new ArrayList<>());
-                cages.add(cage);}
-                cages.get(cages.size() - 1).addCellsToCage(gui.getGridCell(Integer.parseInt(str) - 1));
-
-            } else {
-                labels.add(str);
-                toggle = false;
+                cages.add(cage);
+                if (split2[0].contains(" "))
+                    split2[0] = split2[0].toString().replaceAll("\\s","");
+                for (int i = 0; i < split2.length; i++) {
+                    cage.addCellsToCage(gui.getGridCell(Integer.parseInt(split2[i]) - 1));
+                }
             }
         }
         for (String stringNum : labels) {
@@ -89,7 +94,7 @@ public class GameReader {
             stringOp = stringOp.replaceAll("[0-9]", "");
             operators.add(stringOp);
         }
-        for (int i = 0; i < cages.size() - 1; i++) {
+        for (int i = 0; i < cages.size(); i++) {
             cages.get(i).setLeadingCell(numbers.get(i), operators.get(i));
         }
         for (Cage cage: cages) cage.setBorder();

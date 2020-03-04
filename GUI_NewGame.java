@@ -7,7 +7,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Shape;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -38,11 +41,12 @@ public class GUI_NewGame extends Application {
                 ex.printStackTrace();
             }
         });
-
-        vBox.getChildren().addAll(newGame = new ChoiceBox(FXCollections.observableArrayList("2x2", "3x3", "4x4", "5x5", "6x6", "7x7")),
-               loadFileButton,
+        newGame = new ChoiceBox();
+        newGame.setTooltip(new Tooltip("Select Difficulty"));
+        vBox.getChildren().addAll(newGame, loadFileButton,
                 new Button("Load from input"));
         newGame.setValue("New Game");
+        newGame.setItems(FXCollections.observableArrayList("New Game", "2x2", "3x3", "4x4", "5x5", "6x6", "7x7","8x8"));
         newGame.getSelectionModel().selectedItemProperty().addListener((ChangeListener<String>) (observableValue, number, newValue) -> {
 
             try {

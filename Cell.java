@@ -6,6 +6,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 public class Cell extends VBox {
@@ -55,29 +58,28 @@ public class Cell extends VBox {
 
     /* Adding a listener for when the cursor is in the textField -
      * sets a limit of 1 and only numbers in the input */
-    public void setTextFieldLimit() {
+    public void setTextFieldLimit() throws UnsupportedEncodingException {
         getTextField().textProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(final ObservableValue<? extends String> ov, final String oldValue, final String newValue) {
                 if (!newValue.matches("[1-9]") || Integer.parseInt(newValue) > gui.getHardnessLevel() || textField.getText() == null) { // if the text doesn't match integers 0-9:
-                    textField.clear();
+                    String str = String.valueOf(newValue.charAt(1));
+                    if (str.matches("[1-9]") && Integer.parseInt(str) <= gui.getHardnessLevel() ) {
+                        textField.clear();
+                        textField.setText(str);
+                    }
 
-//                } int c = textField.textProperty().;
-//                    if ((c == KeyEvent.VK_BACK_SPACE) ||
-//                            (c == KeyEvent.VK_DELETE) ||
-//                            (c == KeyEvent.VK_ENTER) ||
-//                            (c == KeyEvent.VK_TAB))
-//                        textField.setText("");
+                    else textField.clear();
                 } else {
                     textField.getText().replace(oldValue, newValue);
-                    textField.getText().replace(oldValue, newValue);
+                   // textField.getText().replace(oldValue, newValue);
                 }
 
                if (getGui().getHintButton().isSelected()){
 
                    getGui().getHint().checkAllColumns();
-                   //getGui().getHint().checkAllRows();
-               }else getGui().getHint().stop();
+                   getGui().getHint().checkAllRows();
+               }//else getGui().getHint().stop();
             }
         });
     }
@@ -128,6 +130,10 @@ public class Cell extends VBox {
 
     public void setCage(Cage cage) {
         this.cage = cage;
+    }
+    public int getID(){
+        int i = row * gui.getHardnessLevel() + column;
+        return  i -1 ;
     }
 
     public ArrayList<Cell> getAdjacentCells() {

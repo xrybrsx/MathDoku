@@ -11,6 +11,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -120,7 +121,7 @@ public class GUI extends Application {
         this.numberButtons = numberButtons;
     }
 
-    public void start(Stage primaryStage) {
+    public void start(Stage primaryStage){
 
         /* GridPane with visible grids as a base for the MathDoku. */
         pane = new GridPane();
@@ -152,7 +153,11 @@ public class GUI extends Application {
                 getCell(j, i).getTextField().setAlignment(Pos.BOTTOM_CENTER);
                 getCell(j, i).getTextField().setPrefHeight(10);
                 getTextFields().add(getCell(j, i).getTextField());
-                getCell(j, i).setTextFieldLimit();
+                try {
+                    getCell(j, i).setTextFieldLimit();
+                } catch (NullPointerException | UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
                 // restrict text input to size 1 and to numbers only
                 //   getCell(j, i).getOperator().setAlignment(Pos.BASELINE_CENTER);
 
@@ -196,8 +201,9 @@ public class GUI extends Application {
             GUI_NewGame game = new GUI_NewGame();
             game.start(stage);
             stage.show();
+            primaryStage.close();
         });
-        hintButton = new ToggleButton("Hint");
+        hintButton = new ToggleButton("Show Mistakes");
         hintButton.setOnMouseClicked(e ->{
                 hint = new Hint(this);
         if (this.getHintButton().isSelected()){
@@ -283,18 +289,20 @@ public class GUI extends Application {
         this.hBox = hBox;
     }
 
-    public void iterateRow(int row) {
+    public ArrayList<TextField>  iterateRow(int row) {
         if (row >= 0 && row < getHardnessLevel()) {
             ArrayList list = new ArrayList<TextField>();
             int j = getHardnessLevel() * row;
             for (int i = getHardnessLevel() * row ; i < j + getHardnessLevel(); i++) {
+                if (!getTextFields().get(i).getText().equals(""))
                 list.add(getTextFields().get(i));
-            }
-            this.getRow = list;
+            }if (list != null)
+                return this.getRow = list;
         }
+        return null;
     }
 
-    public ArrayList<TextField> getRow() {
+    public ArrayList<TextField> getRowCells() {
         return getRow;
     }
 
@@ -303,9 +311,10 @@ public class GUI extends Application {
             ArrayList list = new ArrayList<TextField>();
             int j = 0;
             for (int i = column ; i < getHardnessLevel()*getHardnessLevel(); i = i + getHardnessLevel()) {
+                if (!getCell(column,j).getTextField().getText().equals(""))
                 list.add(getCell(column,j).getTextField());
                 j++;
-            }
+            }if (list != null)
             return this.getColumn = list;
         }
         return null;
