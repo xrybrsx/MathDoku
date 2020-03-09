@@ -9,8 +9,21 @@ public class Cage {
     private Cell cell;
     private Cell leadingCell;
     private GUI gui;
+    private String operator;
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public String getResult() {
+        return result;
+    }
+
+    private String result;
 
     public void setLeadingCell(String operator, String result) {
+        this.operator = operator;
+        this.result = result;
         ArrayList<Cell> duplicate = new ArrayList<>();
         for (int i = 0; i < cells.size() ; i++) {
             duplicate.add(cells.get(i));

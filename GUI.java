@@ -6,12 +6,12 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.TextField;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -29,9 +29,29 @@ public class GUI extends Application {
     /* Contains every Cell in the grid cell, sorted (column,row) */
     private ArrayList<TextField> rowText;
     private ArrayList<Button> numberButtons;
-    private UndoRedo tempNum;
+    private TextField tempNum;
     private Cage cage;
+//    Circle marker;
     private GridPane pane;
+    private Button undo;
+
+    public Button getUndo() {
+        return undo;
+    }
+
+    public void setUndo(Button undo) {
+        this.undo = undo;
+    }
+
+    public Button getRedo() {
+        return redo;
+    }
+
+    public void setRedo(Button redo) {
+        this.redo = redo;
+    }
+
+    private Button redo;
 
     public Hint getHint() {
         return hint;
@@ -131,6 +151,11 @@ public class GUI extends Application {
         pane.setMinSize(300, 300);
         pane.setBackground(Background.EMPTY);
 
+//        marker = new Circle(5);
+//        marker.setManaged(false);
+//        marker.setFill(Color.CRIMSON);
+//        marker.setMouseTransparent(true);
+
         /*Creating a VBox in each grid cell, adding constraints and text field in each one.
          * Nested for-loop for n columns and n rows according to hardness level.*/
         setGridCells(new ArrayList<Cell>());
@@ -145,6 +170,7 @@ public class GUI extends Application {
             for (int j = 0; j < getHardnessLevel(); j++) {
                 pane.add(cell = new Cell(j, i), j, i);
                 getGridCells().add(cell);
+//                getCell(j, i).setMarker(marker);
                 getCell(j, i).setGui(this);
                 getCell(j, i).setFlow(new FlowPane());
                 getCell(j, i).setOperator(new Label());
@@ -155,7 +181,7 @@ public class GUI extends Application {
                 getTextFields().add(getCell(j, i).getTextField());
                 try {
                     getCell(j, i).setTextFieldLimit();
-                } catch (NullPointerException | UnsupportedEncodingException e) {
+                } catch (NullPointerException e) {
                     e.printStackTrace();
                 }
                 // restrict text input to size 1 and to numbers only
@@ -173,10 +199,10 @@ public class GUI extends Application {
             setEffect(number);
         }
 
-        Button undo = new Button("Undo");
-        Button redo = new Button("Redo");
-        setEffect(undo,redo);
-        getHBox().getChildren().addAll(undo, redo);
+        setUndo(new Button("Undo"));
+        setRedo(new Button("Redo"));
+        setEffect(getUndo(),getRedo());
+        getHBox().getChildren().addAll(getUndo(),getRedo());
         getHBox().setAlignment(Pos.CENTER);
         getHBox().setPadding(new Insets(10, 10, 10, 10));
         getHBox().setSpacing(10);
@@ -229,6 +255,10 @@ public class GUI extends Application {
         Scene scene = new Scene(borderPane, 450, 400);
         primaryStage.setMinHeight(400);
         primaryStage.setMinWidth(400);
+
+ //       scene.focusOwnerProperty().addListener(
+//                (prop, oldNode, newNode) -> placeMarker(newNode));
+
         primaryStage.setScene(scene);
         primaryStage.setTitle("MathDoku");
         primaryStage.show();
@@ -241,24 +271,28 @@ public class GUI extends Application {
                 Node fo = scene.getFocusOwner(); // the current textField
                 if (fo instanceof TextInputControl) {
                     ((TextInputControl) fo).setText(button.getText());
-                    tempNum.add(button.getText());
                 }
             });
         }
-        tempNum = new UndoRedo(); //can store only this much numbers
+
         undo.setFocusTraversable(false);
         undo.setOnAction(e -> {
-            Node fo = scene.getFocusOwner(); // the current textField
-            if (fo instanceof TextInputControl) {
-                ((TextInputControl) fo).setText(tempNum.undo());
-            }
+            Node fo = (Cell) scene.getFocusOwner().getParent(); // the current Cell
+            Cell cell = (Cell) fo;
+            cell.getTextField().setText(cell.undo());
+            if (cell.getText().equals(""))
+                undo.setDisable(true);
+            redo.setDisable(false);
         });
         redo.setFocusTraversable(false);
         redo.setOnAction(e -> {
-            Node fo = scene.getFocusOwner(); // the current textField
-            if (fo instanceof TextInputControl) {
-                ((TextInputControl) fo).setText(tempNum.redo());
-            }
+           Node fo = (Cell) scene.getFocusOwner().getParent(); // the current Cell
+            Cell cell = (Cell) fo;
+            cell.getTextField().setText(cell.redo());
+
+            if(cell.getText().equals(""))
+                redo.setDisable(true);
+            undo.setDisable(false);
         });
     }
 
@@ -341,4 +375,17 @@ public class GUI extends Application {
                     });
         }
     }
+////    public void placeMarker(Node newNode) {
+//        double nodeMinX = newNode.getLayoutBounds().getMinX();
+//        double nodeMinY = newNode.getLayoutBounds().getMinY();
+//        Point2D nodeInScene = newNode.localToScene(nodeMinX, nodeMinY);
+////        Point2D nodeInMarkerLocal = marker.sceneToLocal(nodeInScene);
+////        Point2D nodeInMarkerParent = marker.localToParent(nodeInMarkerLocal);
+//
+////        marker.relocate(nodeInMarkerParent.getX()
+////                + marker.getLayoutBounds().getMinX(), nodeInMarkerParent.getY()
+////                + marker.getLayoutBounds().getMinY());
+//
+//    }
+
 }

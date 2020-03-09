@@ -15,14 +15,14 @@ public class Hint {
         this.gui = gui;
     }
 
-    public void checkRow(int i) {
+    public void showRowMistake(int i) {
 
-            BackgroundFill background_fill = new BackgroundFill(Color.rgb(161, 3, 47,0.5),
-                    CornerRadii.EMPTY, Insets.EMPTY);
-            Background background = new Background(background_fill);
+        BackgroundFill background_fill = new BackgroundFill(Color.rgb(161, 3, 47, 0.5),
+                CornerRadii.EMPTY, Insets.EMPTY);
+        Background background = new Background(background_fill);
 
-            gui.iterateRow(i);
-            if (gui.iterateColumn(i) != null) {
+        gui.iterateRow(i);
+        if (gui.iterateColumn(i) != null) {
             Set set = new HashSet();
             for (int j = 0; j < gui.getRowCells().size(); j++) {
                 set.add(gui.getRowCells().get(j).getText());
@@ -30,7 +30,7 @@ public class Hint {
 
             if (set.size() < gui.getHardnessLevel()) {
                 for (int k = 0; k < gui.getHardnessLevel(); k++) {
-                   gui.getCell(k, i).setBackground(background);
+                    gui.getCell(k, i).setBackground(background);
 
                 }
             } else {
@@ -41,8 +41,9 @@ public class Hint {
             }
         }
     }
-    public void checkColumn(int i) {
-        BackgroundFill background_fill = new BackgroundFill(Color.rgb(161, 3, 47,0.5),
+
+    public void showColumnMistake(int i) {
+        BackgroundFill background_fill = new BackgroundFill(Color.rgb(161, 3, 47, 0.5),
                 CornerRadii.EMPTY, Insets.EMPTY);
         Background background = new Background(background_fill);
         gui.iterateColumn(i);
@@ -55,7 +56,7 @@ public class Hint {
                 for (int k = 0; k < gui.getHardnessLevel(); k++) {
                     gui.getCell(i, k).setBackground(background);
 
-            }
+                }
             } else {
                 for (int k = 0; k < gui.getHardnessLevel(); k++) {
                     gui.getCell(i, k).setBackground(Background.EMPTY);
@@ -63,18 +64,21 @@ public class Hint {
             }
         }
     }
-    public void checkAllColumns(){
+
+    public void checkAllColumns() {
         for (int i = 0; i < gui.getHardnessLevel(); i++) {
-            checkColumn(i);
+            showColumnMistake(i);
             checkAllRows();
         }
     }
-    public void checkAllRows(){
+
+    public void checkAllRows() {
         for (int i = 0; i < gui.getHardnessLevel(); i++) {
-            checkRow(i);
+            showRowMistake(i);
         }
     }
-    public void stop(){
+
+    public void stop() {
         for (int i = 0; i < gui.getHardnessLevel(); i++) {
             for (int k = 0; k < gui.getHardnessLevel(); k++) {
                 gui.getCell(k, i).setBackground(Background.EMPTY);
@@ -82,6 +86,38 @@ public class Hint {
         }
 
     }
+
+    public boolean isCageRight() {
+        int result = 1;
+        for (Cage cage : gui.getCages()) {
+            switch (String.valueOf(cage.getLeadingCell().getResult().getText())) {
+                case "+":
+                    for (Cell cell : cage.getCells()) {
+                        if(cell.getText() != "")
+                        result = +cell.getTextInt();
+                    }
+                case "x":
+                    for (Cell cell : cage.getCells()) {
+                        if(cell.getText() != "")
+                        result = cell.getTextInt() * result;
+                    }
+                case "÷":
+                    for (int i = 0; 0 < cage.getCells().size(); i++) {
+                        if(cage.getCells().get(1).getText() != "")
+                        result = result / cage.getCells().get(i).getTextInt() / cage.getCells().get(i + 1).getTextInt();
+                    }
+                case "-":
+                    for (Cell cell : cage.getCells()) {
+                        if(cell.getText() != "")
+                        result = -cell.getTextInt();
+                    }
+                default:
+                    break;
+
+            }result = Math.abs(result);
+        }return  true;
+    }
+}
 //    public boolean hasEqualRow(Cell cell) {
 //        int i;
 //        if (cell.getID() % gui.getHardnessLevel() == 0) i = cell.getID() - gui.getHardnessLevel() + 1;
@@ -100,4 +136,4 @@ public class Hint {
 //        }
 //        return false;
 //    }
-}
+

@@ -6,10 +6,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.EmptyStackException;
+import java.util.Stack;
 
 public class Cell extends VBox {
     private TextField textField;
@@ -21,6 +20,36 @@ public class Cell extends VBox {
     private int column;
     private int row;
     private ArrayList<Cell> adjacentCells;
+    Stack<String> undoStack = new Stack<>();
+    Stack<String> redoStack = new Stack<>();
+    boolean toggle;
+//    public Circle getMarker() {
+//        return marker;
+//    }
+
+//    public void setMarker(Circle marker) {
+//        this.marker = marker;
+//        getChildren().add(marker);
+ //   }
+
+//    private Circle marker;
+public Stack getRedoStack() {
+    return this.redoStack;
+}
+
+    public Stack getUndoStack() {
+        return this.undoStack;
+    }
+
+    public TextField getEdit() {
+        return edit;
+    }
+
+    public void setEdit(TextField edit) {
+        this.edit = edit;
+    }
+
+    private TextField edit;
 
     Cell(int column, int row) {
         this.column = column;
@@ -34,7 +63,7 @@ public class Cell extends VBox {
 
     public void setFlow(FlowPane flow) {
         this.flow = flow;
-        this.getChildren().add(flow);
+        this.getChildren().addAll(flow);
     }
 
     public GUI getGui() {
@@ -52,34 +81,38 @@ public class Cell extends VBox {
 
     public void setTextField(TextField textField) {
         this.textField = textField;
-        this.getChildren().add(this.textField);
+        this.getChildren().addAll(this.textField);
         this.textField.alignmentProperty().setValue(Pos.BOTTOM_CENTER);
     }
 
-    /* Adding a listener for when the cursor is in the textField -
-     * sets a limit of 1 and only numbers in the input */
-    public void setTextFieldLimit() throws UnsupportedEncodingException {
+    /* Adding a listener for when the text in the field is changed -
+     * sets a limit of length 1 and numbers only */
+    public void setTextFieldLimit() {
+
+
         getTextField().textProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(final ObservableValue<? extends String> ov, final String oldValue, final String newValue) {
-                if (!newValue.matches("[1-9]") || Integer.parseInt(newValue) > gui.getHardnessLevel() || textField.getText() == null) { // if the text doesn't match integers 0-9:
-                    String str = String.valueOf(newValue.charAt(1));
-                    if (str.matches("[1-9]") && Integer.parseInt(str) <= gui.getHardnessLevel() ) {
-                        textField.clear();
-                        textField.setText(str);
+
+                if (newValue.equals("") || // if user has pressed "delete"
+                        (newValue.substring(newValue.length() - 1).matches("[1-9]") // if matches integers 1-9
+                                && Integer.parseInt(newValue.substring(newValue.length() - 1)) <= gui.getHardnessLevel())){
+                    textField.setText(newValue);
+                    addUndo(newValue);
+                    if (newValue.length() > 1) { // update the newValue if it gets longer than 1
+                        textField.setText(newValue.substring(newValue.length() - 1));
+
                     }
-
-                    else textField.clear();
-                } else {
-                    textField.getText().replace(oldValue, newValue);
-                   // textField.getText().replace(oldValue, newValue);
+                    /*check for correctness and show mistakes if incorrect*/
+                    if (getGui().getHintButton().isSelected()) {
+                        getGui().getHint().checkAllColumns();
+                        getGui().getHint().isCageRight();
+                    }
                 }
-
-               if (getGui().getHintButton().isSelected()){
-
-                   getGui().getHint().checkAllColumns();
-                   getGui().getHint().checkAllRows();
-               }//else getGui().getHint().stop();
+                // if input is invalid set the oldValue so the text doesn't change
+                else {
+                    textField.setText(oldValue);
+                }
             }
         });
     }
@@ -131,9 +164,10 @@ public class Cell extends VBox {
     public void setCage(Cage cage) {
         this.cage = cage;
     }
-    public int getID(){
+
+    public int getID() {
         int i = row * gui.getHardnessLevel() + column;
-        return  i -1 ;
+        return i - 1;
     }
 
     public ArrayList<Cell> getAdjacentCells() {
@@ -172,4 +206,58 @@ public class Cell extends VBox {
         if (getRow() == gui.getHardnessLevel() - 1) return false;
         else return true;
     }
+
+    public int getTextInt() {
+        return Integer.parseInt(getTextField().getText());
+    }
+
+    public String getText() {
+        return getTextField().getText();
+    }
+
+    public String undo() {
+        if (getUndoStack().isEmpty()|| getUndoStack().peek().equals("")){
+            return "";
+        }else {
+            if (toggle == false ){
+                getRedoStack().push(getUndoStack().pop());
+            }
+            try {
+            String s = getUndoStack().pop().toString();
+            toggle = true;
+            return s;
+            }
+
+            catch (EmptyStackException e){
+                System.out.println("no more numbers to undo!");
+            }
+        }
+        return "";
+    }
+    public String redo(){
+        if (getRedoStack().isEmpty() || getRedoStack().peek().equals("")){
+            return "";
+        }
+        else {
+            if (toggle == true ){
+            getUndoStack().push(getRedoStack().pop());
+        }
+            String s = getRedoStack().pop().toString();
+
+            if (!getUndoStack().peek().equals(s))
+            getUndoStack().push(s);
+            toggle = false;
+            return s;
+        }
+    }
+    public void addUndo(String s){
+        if(undoStack.isEmpty()){
+            getUndoStack().push(s);
+            toggle = false;
+        }
+        else if (s.length()==1 && !getUndoStack().peek().equals(s))
+        getUndoStack().push(s);
+        toggle = false;
+    }
+
 }

@@ -85,6 +85,7 @@ public class GameReader {
                 }
             }
         }
+        gui.setCages(cages);
         for (String stringNum : labels) {
             stringNum = stringNum.replaceAll("\\D+", "");
             numbers.add(stringNum);
