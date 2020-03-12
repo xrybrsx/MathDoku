@@ -3,6 +3,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 
@@ -10,46 +11,26 @@ import java.util.ArrayList;
 import java.util.EmptyStackException;
 import java.util.Stack;
 
-public class Cell extends VBox {
+public class Cell extends BorderPane {
     private TextField textField;
     private Label operator;
     private Label result;
     private Cage cage;
     private FlowPane flow;
-    private GUI gui;
+    private Controller controller;
     private int column;
     private int row;
-    private ArrayList<Cell> adjacentCells;
-    Stack<String> undoStack = new Stack<>();
-    Stack<String> redoStack = new Stack<>();
-    boolean toggle;
-//    public Circle getMarker() {
-//        return marker;
-//    }
+    private Stack<String> undoStack = new Stack<>();
+    private Stack<String> redoStack = new Stack<>();
+    private boolean toggle;
 
-//    public void setMarker(Circle marker) {
-//        this.marker = marker;
-//        getChildren().add(marker);
- //   }
-
-//    private Circle marker;
-public Stack getRedoStack() {
+    Stack getRedoStack() {
     return this.redoStack;
 }
 
-    public Stack getUndoStack() {
+    Stack getUndoStack() {
         return this.undoStack;
     }
-
-    public TextField getEdit() {
-        return edit;
-    }
-
-    public void setEdit(TextField edit) {
-        this.edit = edit;
-    }
-
-    private TextField edit;
 
     Cell(int column, int row) {
         this.column = column;
@@ -61,33 +42,34 @@ public Stack getRedoStack() {
         return flow;
     }
 
-    public void setFlow(FlowPane flow) {
+    void setFlow(FlowPane flow) {
         this.flow = flow;
-        this.getChildren().addAll(flow);
+       // this.getChildren().addAll(flow);
+        setTop(flow);
     }
 
-    public GUI getGui() {
-        return gui;
+    Controller getController() {
+        return controller;
     }
 
-    public void setGui(GUI gui) {
-        this.gui = gui;
+    void setController(Controller controller) {
+        this.controller = controller;
 
     }
 
-    public TextField getTextField() {
+    TextField getTextField() {
         return this.textField;
     }
 
-    public void setTextField(TextField textField) {
+    void setTextField(TextField textField) {
         this.textField = textField;
-        this.getChildren().addAll(this.textField);
-        this.textField.alignmentProperty().setValue(Pos.BOTTOM_CENTER);
+        setBottom(textField);
+
     }
 
     /* Adding a listener for when the text in the field is changed -
      * sets a limit of length 1 and numbers only */
-    public void setTextFieldLimit() {
+    void setTextFieldLimit() {
 
 
         getTextField().textProperty().addListener(new ChangeListener<String>() {
@@ -96,7 +78,7 @@ public Stack getRedoStack() {
 
                 if (newValue.equals("") || // if user has pressed "delete"
                         (newValue.substring(newValue.length() - 1).matches("[1-9]") // if matches integers 1-9
-                                && Integer.parseInt(newValue.substring(newValue.length() - 1)) <= gui.getHardnessLevel())){
+                                && Integer.parseInt(newValue.substring(newValue.length() - 1)) <= controller.getHardnessLevel())){
                     textField.setText(newValue);
                     addUndo(newValue);
                     if (newValue.length() > 1) { // update the newValue if it gets longer than 1
@@ -104,9 +86,8 @@ public Stack getRedoStack() {
 
                     }
                     /*check for correctness and show mistakes if incorrect*/
-                    if (getGui().getHintButton().isSelected()) {
-                        getGui().getHint().checkAllColumns();
-                        getGui().getHint().isCageRight();
+                    if (getController().getHintButton().isSelected()) {
+                        getController().getHint().showMistakes();
                     }
                 }
                 // if input is invalid set the oldValue so the text doesn't change
@@ -117,11 +98,11 @@ public Stack getRedoStack() {
         });
     }
 
-    public Label getOperator() {
+    Label getOperator() {
         return operator;
     }
 
-    public void setOperator(Label operator) {
+    void setOperator(Label operator) {
         this.operator = operator;
         flow.getChildren().add(this.operator);
         flow.setPrefSize(10.0, 10.0);
@@ -129,11 +110,11 @@ public Stack getRedoStack() {
         this.operator.setAlignment(Pos.TOP_CENTER);
     }
 
-    public Label getResult() {
+    Label getResult() {
         return result;
     }
 
-    public void setResult(Label result) {
+    void setResult(Label result) {
         this.result = result;
         flow.getChildren().add(this.result);
         flow.setPrefWrapLength(50.0);
@@ -141,85 +122,71 @@ public Stack getRedoStack() {
         this.result.setAlignment(Pos.TOP_LEFT);
     }
 
-    public int getColumn() {
+    int getColumn() {
         return column;
     }
 
-    public void setColumn(int column) {
-        this.column = column;
-    }
-
-    public int getRow() {
+    int getRow() {
         return row;
     }
 
-    public void setRow(int row) {
-        this.row = row;
-    }
-
-    public Cage getCage() {
-        return cage;
-    }
-
-    public void setCage(Cage cage) {
+    void setCage(Cage cage) {
         this.cage = cage;
     }
 
-    public int getID() {
-        int i = row * gui.getHardnessLevel() + column;
+    int getID() {
+        int i = row * controller.getHardnessLevel() + column;
         return i - 1;
     }
 
-    public ArrayList<Cell> getAdjacentCells() {
-        adjacentCells = new ArrayList<>();
+    ArrayList<Cell> getAdjacentCells() {
+        ArrayList<Cell> adjacentCells = new ArrayList<>();
         if (hasTop()) {
-            adjacentCells.add(gui.getCell(getColumn(), getRow() - 1));
+            adjacentCells.add(controller.getCell(getColumn(), getRow() - 1));
         }
         if (hasRight()) {
-            adjacentCells.add(gui.getCell(getColumn() + 1, getRow()));
+            adjacentCells.add(controller.getCell(getColumn() + 1, getRow()));
         }
         if (hasBottom()) {
-            adjacentCells.add(gui.getCell(getColumn(), getRow() + 1));
+            adjacentCells.add(controller.getCell(getColumn(), getRow() + 1));
         }
         if (hasLeft()) {
-            adjacentCells.add(gui.getCell(getColumn() - 1, getRow()));
+            adjacentCells.add(controller.getCell(getColumn() - 1, getRow()));
         }
         return adjacentCells;
     }
 
-    public boolean hasRight() {
-        if (getColumn() == gui.getHardnessLevel() - 1) return false;
-        else return true;
+    private boolean hasRight() {
+        return getColumn() != controller.getHardnessLevel() - 1;
     }
 
-    public boolean hasLeft() {
-        if (getColumn() == 0) return false;
-        else return true;
+    private boolean hasLeft() {
+        return getColumn() != 0;
     }
 
-    public boolean hasTop() {
-        if (getRow() == 0) return false;
-        else return true;
+    private boolean hasTop() {
+        return getRow() != 0;
     }
 
-    public boolean hasBottom() {
-        if (getRow() == gui.getHardnessLevel() - 1) return false;
-        else return true;
+    private boolean hasBottom() {
+        return getRow() != controller.getHardnessLevel() - 1;
     }
 
-    public int getTextInt() {
+    int getTextInt() {
+        if (!getText().equals(""))
         return Integer.parseInt(getTextField().getText());
+        return 0;
     }
 
-    public String getText() {
+    String getText() {
         return getTextField().getText();
     }
 
-    public String undo() {
+    String undo() {
         if (getUndoStack().isEmpty()|| getUndoStack().peek().equals("")){
             return "";
         }else {
-            if (toggle == false ){
+            if (!toggle){
                 getRedoStack().push(getUndoStack().pop());
             }
             try {
@@ -234,12 +201,12 @@ public Stack getRedoStack() {
         }
         return "";
     }
-    public String redo(){
+    String redo(){
         if (getRedoStack().isEmpty() || getRedoStack().peek().equals("")){
             return "";
         }
         else {
-            if (toggle == true ){
+            if (toggle){
             getUndoStack().push(getRedoStack().pop());
         }
             String s = getRedoStack().pop().toString();
@@ -250,7 +217,7 @@ public Stack getRedoStack() {
             return s;
         }
     }
-    public void addUndo(String s){
+    private void addUndo(String s){
         if(undoStack.isEmpty()){
             getUndoStack().push(s);
             toggle = false;

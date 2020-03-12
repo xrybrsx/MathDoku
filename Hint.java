@@ -4,136 +4,155 @@ import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class Hint {
 
-    private GUI gui;
+    private Controller controller;
 
-    Hint(GUI gui) {
-        this.gui = gui;
+    Hint(Controller controller) {
+        this.controller = controller;
     }
 
+    // main method for showing mistakes
+    //coloring mistaken cell in red
+    public void showMistakes() {
+        for (int k = 0; k < controller.getHardnessLevel(); k++) {
+            for (int i = 0; i < controller.getHardnessLevel(); i++) {
+                controller.getCell(i, k).setBackground(Background.EMPTY);
+            }
+            checkAllColumns();
+            checkAllRows();
+            checkAllCages();
+        }
+    }
+    //checks for repetition in a row and colors it
     public void showRowMistake(int i) {
 
         BackgroundFill background_fill = new BackgroundFill(Color.rgb(161, 3, 47, 0.5),
                 CornerRadii.EMPTY, Insets.EMPTY);
         Background background = new Background(background_fill);
 
-        gui.iterateRow(i);
-        if (gui.iterateColumn(i) != null) {
+        controller.iterateRow(i);
+        if (controller.iterateColumn(i) != null) {
             Set set = new HashSet();
-            for (int j = 0; j < gui.getRowCells().size(); j++) {
-                set.add(gui.getRowCells().get(j).getText());
+            for (int j = 0; j < controller.getRowCells().size(); j++) {
+                set.add(controller.getRowCells().get(j).getText());
             }
 
-            if (set.size() < gui.getHardnessLevel()) {
-                for (int k = 0; k < gui.getHardnessLevel(); k++) {
-                    gui.getCell(k, i).setBackground(background);
-
-                }
-            } else {
-                for (int k = 0; k < gui.getHardnessLevel(); k++) {
-                    gui.getCell(k, i).setBackground(Background.EMPTY);
+            if (set.size() < controller.getHardnessLevel()) {
+                for (int k = 0; k < controller.getHardnessLevel(); k++) {
+                    controller.getCell(k, i).setBackground(background);
 
                 }
             }
         }
     }
-
+    //checks for repetition in a column and colors it
     public void showColumnMistake(int i) {
         BackgroundFill background_fill = new BackgroundFill(Color.rgb(161, 3, 47, 0.5),
                 CornerRadii.EMPTY, Insets.EMPTY);
         Background background = new Background(background_fill);
-        gui.iterateColumn(i);
-        if (gui.iterateColumn(i) != null) {
+        controller.iterateColumn(i);
+        if (controller.iterateColumn(i) != null) {
             Set set = new HashSet();
-            for (int j = 0; j < gui.getColumn().size(); j++) {
-                set.add(gui.getColumn().get(j).getText());
+            for (int j = 0; j < controller.getColumn().size(); j++) {
+                set.add(controller.getColumn().get(j).getText());
             }
-            if (set.size() < gui.getHardnessLevel()) {
-                for (int k = 0; k < gui.getHardnessLevel(); k++) {
-                    gui.getCell(i, k).setBackground(background);
+            if (set.size() < controller.getHardnessLevel()) {
+                for (int k = 0; k < controller.getHardnessLevel(); k++) {
+                    controller.getCell(i, k).setBackground(background);
 
-                }
-            } else {
-                for (int k = 0; k < gui.getHardnessLevel(); k++) {
-                    gui.getCell(i, k).setBackground(Background.EMPTY);
                 }
             }
         }
     }
+    //checks the algebra expression in the cage and colors if wrong
+    public void showCageMistake(Cage cage){
+        BackgroundFill background_fill = new BackgroundFill(Color.rgb(161, 3, 47, 0.5),
+                CornerRadii.EMPTY, Insets.EMPTY);
+        Background background = new Background(background_fill);
+        if (!isCageRight(cage)){
+            for(Cell cell: cage.getCells()){
+                cell.setBackground(background);
+            }
+        }
+    }
 
+    /* Methods for going through all cages, rows, and cages.*/
     public void checkAllColumns() {
-        for (int i = 0; i < gui.getHardnessLevel(); i++) {
+        for (int i = 0; i < controller.getHardnessLevel(); i++) {
             showColumnMistake(i);
-            checkAllRows();
+        }
+    }
+    public void checkAllCages(){
+        for (Cage cage: controller.getCages()) {
+            showCageMistake(cage);
         }
     }
 
     public void checkAllRows() {
-        for (int i = 0; i < gui.getHardnessLevel(); i++) {
+        for (int i = 0; i < controller.getHardnessLevel(); i++) {
             showRowMistake(i);
         }
     }
-
+     //clear color if user wants to stop showing mistakes
     public void stop() {
-        for (int i = 0; i < gui.getHardnessLevel(); i++) {
-            for (int k = 0; k < gui.getHardnessLevel(); k++) {
-                gui.getCell(k, i).setBackground(Background.EMPTY);
+        for (int i = 0; i < controller.getHardnessLevel(); i++) {
+            for (int k = 0; k < controller.getHardnessLevel(); k++) {
+                controller.getCell(k, i).setBackground(Background.EMPTY);
             }
         }
 
     }
-
-    public boolean isCageRight() {
+    //checks the algebra expressions
+    public boolean isCageRight(Cage cage) {
+        for (Cell cell: cage.getCells()){
+            if (cell.getText().equals(""))
+                return false;
+        }
         int result = 1;
-        for (Cage cage : gui.getCages()) {
             switch (String.valueOf(cage.getLeadingCell().getResult().getText())) {
                 case "+":
+                    result = 0;
                     for (Cell cell : cage.getCells()) {
-                        if(cell.getText() != "")
-                        result = +cell.getTextInt();
+                        if (cell.getText() != "")
+                            result = result +cell.getTextInt();
                     }
+                    break;
                 case "x":
                     for (Cell cell : cage.getCells()) {
-                        if(cell.getText() != "")
-                        result = cell.getTextInt() * result;
+                        if (cell.getText() != "")
+                            result = cell.getTextInt() * result;
                     }
+                    break;
                 case "÷":
-                    for (int i = 0; 0 < cage.getCells().size(); i++) {
-                        if(cage.getCells().get(1).getText() != "")
-                        result = result / cage.getCells().get(i).getTextInt() / cage.getCells().get(i + 1).getTextInt();
+                    List<Cell> temp1 = new ArrayList<>(cage.getCells());
+                    if(cage.getCells().size()>1) {
+                        temp1.remove(cage.getBiggestCell());
+                        result = cage.getBiggestCellInt();
                     }
+                    for (Cell cell : temp1) {
+                        result = result / cell.getTextInt();
+                    } break;
                 case "-":
-                    for (Cell cell : cage.getCells()) {
-                        if(cell.getText() != "")
-                        result = -cell.getTextInt();
+                    if(cage.getCells().size()>1) {
+                        result = cage.getBiggestCellInt();
                     }
+                    for (Cell cell : cage.getCells()) {
+                        result = result - cell.getTextInt();
+                    }
+                    result = result+cage.getBiggestCellInt();
+                break;
                 default:
                     break;
-
-            }result = Math.abs(result);
-        }return  true;
+            }
+            if (result == Integer.parseInt(cage.getLeadingCell().getOperator().getText()) || cage.getLeadingCell().getResult().getText() == "")
+                return true;
+            else return false;
     }
 }
-//    public boolean hasEqualRow(Cell cell) {
-//        int i;
-//        if (cell.getID() % gui.getHardnessLevel() == 0) i = cell.getID() - gui.getHardnessLevel() + 1;
-//        else i = cell.getID() - cell.getID() % gui.getHardnessLevel() + 1;
-//        int stop;
-//        if (cell.getID() % gui.getHardnessLevel() == 0) stop = cell.getID();
-//        else stop = cell.getID() - cell.getID() % gui.getHardnessLevel() + gui.getHardnessLevel();
-//        for (; i <= stop; i++) {
-//            //System.out.println(i);
-//            for (int j = i + 1; j <= stop; j++) {
-//                //System.out.println(j+"//"+i);
-//                if (getCellByID(j).getValue() == getCellByID(i).getValue() && getCellByID(j).getValue() != 0) {
-//                    return true;
-//                }
-//            }
-//        }
-//        return false;
-//    }
 
