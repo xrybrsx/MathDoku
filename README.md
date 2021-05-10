@@ -1,7 +1,7 @@
 # MathDoku
 
-Programming II
+Programming II Coursework 
 
-Ugly Java + JavaFX Coursework 
+Unpleasant Java + JavaFX Sudoku-like game
 
 University of Southampton 
