@@ -2,6 +2,6 @@
 
 Programming II Coursework 
 
-Unpleasant Java + JavaFX Sudoku-like game
+ Java + JavaFX Sudoku-like game
 
 University of Southampton 
