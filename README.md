@@ -1,6 +1,6 @@
 # MathDoku
 
-Programming II Coursework 
+Programming II Individual Coursework 
 
  Java + JavaFX Sudoku-like game
 
